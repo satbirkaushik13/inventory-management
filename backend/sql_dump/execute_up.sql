@@ -32,8 +32,8 @@ CREATE TABLE fs_keywords (
 CREATE TABLE fs_items (
     item_id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(255) NOT NULL,
-    item_type TINYINT NOT NULL,  -- (0: Pant, 1: Shirt, 2: Shoes, 3: Jackets)
-    item_category TINYINT NOT NULL,  -- (0: Men, 1: Women, 2: Children)
+    item_type_id TINYINT NOT NULL,  -- (1: Pant, 2: Shirt, 3: Shoes, 4: Jackets)
+    item_category_id TINYINT NOT NULL,  -- (1: Men, 2: Women, 3: Children)
     item_size VARCHAR(50),
     item_description TEXT,
     item_cost_price DECIMAL(10,2) NOT NULL,
@@ -73,10 +73,10 @@ CREATE TABLE fs_orders (
 INSERT INTO fs_keywords (keyword_name) VALUES ('Casual'), ('Formal'), ('Sportswear');
 
 -- Insert sample data into fs_items
-INSERT INTO fs_items (item_name, item_type, item_category, item_size, item_keyword_id, item_description, item_cost_price, item_display_price, item_sale_price, item_stock, item_status) 
+INSERT INTO fs_items (item_name, item_type_id, item_category_id, item_size, item_keyword_id, item_description, item_cost_price, item_display_price, item_sale_price, item_stock, item_status) 
 VALUES 
-('Blue Jeans', 0, 0, 'L', 1, 'Comfortable denim jeans', 20.00, 35.00, 30.00, 50, 1),
-('White Shirt', 1, 1, 'M', 2, 'Elegant white shirt', 15.00, 25.00, 20.00, 30, 1);
+('Blue Jeans', 1, 2, 'L', 1, 'Comfortable denim jeans', 20.00, 35.00, 30.00, 50, 1),
+('White Shirt', 2, 3, 'M', 2, 'Elegant white shirt', 15.00, 25.00, 20.00, 30, 1);
 
 -- Insert sample data into fs_attachments
 INSERT INTO fs_attachments (attachment_record_id, attachment_name, attachment_type) 
@@ -92,3 +92,6 @@ VALUES
 
 CREATE TABLE `fs_items_to_keywords` (`item_id` INT NOT NULL , `keyword_id` INT NOT NULL ) ENGINE = InnoDB;
 ALTER TABLE `fs_items_to_keywords` ADD UNIQUE(`item_id`, `keyword_id`);
+
+CREATE TABLE `fs_categories` (`category_id` INT NOT NULL AUTO_INCREMENT , `category_name` VARCHAR(150) NOT NULL , PRIMARY KEY (`category_id`), UNIQUE `Category Name` (`category_name`)) ENGINE = InnoDB;
+CREATE TABLE `fs_types` (`type_id` INT NOT NULL AUTO_INCREMENT , `type_name` VARCHAR(100) NOT NULL , PRIMARY KEY (`type_id`), UNIQUE `Type Name` (`type_name`)) ENGINE = InnoDB;

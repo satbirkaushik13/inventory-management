@@ -202,7 +202,11 @@ app.post("/items", authenticateToken, (req, res) => {
 app.get("/item/get/:item_id", authenticateToken, (req, res) => {
 	const { item_id } = req.params; // Extract item_id from request params
 
-	const sql = "SELECT * FROM fs_items WHERE item_id = ?";
+	const sql = `SELECT * FROM fs_items
+    INNER JOIN fs_categories ON category_id = item_category_id
+    INNER JOIN fs_types ON type_id = item_type_id
+    WHERE fs_items.item_id = ?`;
+
 
 	db.query(sql, [item_id], (err, itemResult) => {
 		if (err) {
@@ -355,7 +359,7 @@ app.delete("/item/delete/:item_id", authenticateToken, (req, res) => {
 	});
 });
 
-app.post("/keyword/add", authenticateToken, (req, res) => {
+app.post("/keywords/add", authenticateToken, (req, res) => {
 	let insertData = req.body;
 	// Define sensitive columns that should NOT be updated
 	const sensitiveColumn = "keyword_id";
@@ -542,6 +546,120 @@ app.post("/item/image/upload/:item_id", authenticateToken, upload.single("image"
 				'orignal': path.join('item', 'image', req.file.filename),
 				'custom': path.join("item", "image", "500X500", "50", req.file.filename)
 			}
+		});
+	});
+});
+
+app.get("/categories", authenticateToken, (req, res) => {
+	let sql = `
+		SELECT
+			category_id,
+			category_name
+		FROM fs_categories
+	`;
+
+	db.query(sql, (err, results) => {
+		if (err) {
+			console.error("❌ Database error:", err);
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		if (results.length === 0) {
+			return res.status(404).json({ message: "No category found." });
+		}
+
+		// Send formatted response
+		res.json({
+			message: "Success",
+			data: results,
+		});
+	});
+});
+
+app.post("/categories/add", authenticateToken, (req, res) => {
+	let categories = req.body;
+
+	if (!Array.isArray(categories) || categories.length === 0) {
+		return res.status(400).json({ error: "Invalid or empty categories array." });
+	}
+
+	let categoriesInsertQry = `
+        INSERT INTO fs_categories (category_name) 
+        VALUES ? 
+        ON DUPLICATE KEY UPDATE category_name = VALUES(category_name)
+    `;
+
+	let categoriesNamesArr = categories.map(category => [category.category_name]);
+	if (!Array.isArray(categoriesNamesArr) || categoriesNamesArr.length === 0) {
+		return res.status(400).json({ error: "Invalid or empty categories array." });
+	}
+
+	db.query(categoriesInsertQry, [categoriesNamesArr], (err, results) => {
+		if (err) {
+			console.error("❌ Linking Error:", err);
+			return res.status(500).json({ error: "Database error while creating categories." });
+		}
+
+		res.json({
+			message: "Categories added successsfully!",
+			affectedRows: results.affectedRows
+		});
+	});
+});
+
+app.get("/types", authenticateToken, (req, res) => {
+	let sql = `
+		SELECT
+			type_id,
+			type_name
+		FROM fs_types
+	`;
+
+	db.query(sql, (err, results) => {
+		if (err) {
+			console.error("❌ Database error:", err);
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		if (results.length === 0) {
+			return res.status(404).json({ message: "No type found." });
+		}
+
+		// Send formatted response
+		res.json({
+			message: "Success",
+			data: results,
+		});
+	});
+});
+
+app.post("/types/add", authenticateToken, (req, res) => {
+	let types = req.body;
+
+	if (!Array.isArray(types) || types.length === 0) {
+		return res.status(400).json({ error: "Invalid or empty types array." });
+	}
+
+	let typesInsertQry = `
+        INSERT INTO fs_types (type_name) 
+        VALUES ? 
+        ON DUPLICATE KEY UPDATE type_name = VALUES(type_name)
+    `;
+
+	let typesNamesArr = types.map(type => [type.type_name]);
+	if (!Array.isArray(typesNamesArr) || typesNamesArr.length === 0) {
+		return res.status(400).json({ error: "Invalid or empty types array." });
+	}
+
+	db.query(typesInsertQry, [typesNamesArr], (err, results) => {
+		if (err) {
+			console.error("❌ Linking Error:", err);
+			return res.status(500).json({ error: "Database error while creating types." });
+		}
+
+		res.json({
+			message: "Type`s added successsfully!",
+			affectedRows: results.affectedRows
 		});
 	});
 });
