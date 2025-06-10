@@ -1,97 +1,217 @@
 
 -- Drop existing tables if they exist (for a fresh start)
-DROP TABLE IF EXISTS fs_admin_users, fs_orders, fs_attachments, fs_items, fs_keywords;
+DROP TABLE IF EXISTS im_admin_users,
+im_items,
+im_item_size,
+im_item_size_type,
+im_keywords,
+im_item_keywords,
+im_attachments,
+im_item_history,
+im_brands,
+im_categories,
+im_category_hierarchy,
+im_orders,
+im_customers,
+im_expenses,
+im_expense_type;
+
+DROP TRIGGER IF EXISTS trg_update_item_code;
+DROP TRIGGER IF EXISTS trg_generate_order_invoice;
+
 
 -- Create fs_admin_users table
-CREATE TABLE fs_admin_users (
-    id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role VARCHAR(50) DEFAULT 'admin',
-    status BOOLEAN DEFAULT TRUE,
-    last_login TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+CREATE TABLE im_admin_users(
+    `au_id` INT NOT NULL AUTO_INCREMENT,
+    `au_name` VARCHAR(150) NOT NULL,
+    `au_email` VARCHAR(255) NOT NULL,
+    `au_password_hash` TEXT NOT NULL,
+    `au_role` VARCHAR(50) NOT NULL DEFAULT 'admin',
+    `au_status` TINYINT NOT NULL,
+    `au_last_login` TIMESTAMP NOT NULL,
+    `au_created_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `au_updated_on` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(`au_id`)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /* 123456*/
-INSERT INTO fs_admin_users (full_name, email, password_hash, role, status, created_at, updated_at)
-VALUES ('Admin', 'admin@fashion.com', 
-        'e10adc3949ba59abbe56e057f20f883e', 
-        'superadmin', TRUE, NOW(), NOW());
+INSERT INTO `im_admin_users` (`au_name`, `au_email`, `au_password_hash`, `au_role`, `au_status`, `au_last_login`, `au_created_on`, `au_updated_on`)
+VALUES('Admin', 'admin@im.com', 'e10adc3949ba59abbe56e057f20f883e', 'superadmin', '1', NOW(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+CREATE TABLE im_items (
+    item_id INT AUTO_INCREMENT PRIMARY KEY, 
+    item_code VARCHAR(50) UNIQUE NOT NULL, 
+    item_name VARCHAR(255) NOT NULL, 
+    item_description TEXT, 
+    item_brand_id INT NOT NULL COMMENT 'Reference to im_brands', 
+    item_category_id INT NOT NULL COMMENT 'Reference to im_categories', 
+    item_size_id INT NOT NULL COMMENT 'Reference to im_item_size', 
+    item_size_type_id INT NOT NULL COMMENT 'Reference to im_item_size_type', 
+    item_stock INT DEFAULT 0, 
+    item_cost_price DECIMAL(10,2) NOT NULL, 
+    item_discount_in DECIMAL(10,2) DEFAULT 0.00, 
+    item_selling_price DECIMAL(10,2) NOT NULL COMMENT 'MRP (Maximum Retail Price)', 
+    item_discount_out DECIMAL(10,2) DEFAULT 0.00, 
+    item_including_taxes TINYINT(1) DEFAULT 0, 
+    item_tax_paid_value DECIMAL(10,2) DEFAULT 0.00, 
+    item_status TINYINT(1) DEFAULT 1 COMMENT '1 = Active, 0 = Inactive', 
+    item_added_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    item_updated_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Create trigger to update item code if not added after insertion
+DELIMITER //
+
+CREATE TRIGGER trg_update_item_code
+AFTER INSERT ON im_items
+FOR EACH ROW
+BEGIN
+    IF NEW.item_code IS NULL OR NEW.item_code = '' THEN
+        UPDATE im_items 
+        SET item_code = LPAD(NEW.item_id, 6, '0') 
+        WHERE item_id = NEW.item_id;
+    END IF;
+END;
+//
+
+DELIMITER ;
 
 
--- Create fs_keywords table
-CREATE TABLE fs_keywords (
+CREATE TABLE im_item_size (
+    size_id INT AUTO_INCREMENT PRIMARY KEY,
+    size_name VARCHAR(50) UNIQUE NOT NULL COMMENT 'Size name (e.g., XL, Gram, Litre)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO im_item_size (size_name) VALUES
+('X'),
+('L'),
+('XL'),
+('XXL'),
+('Kilogram'),
+('Gram'),
+('Litre'),
+('Millilitre'),
+('Centimeter'),
+('Meter'),
+('Inch'),
+('Foot'),
+('Piece'),
+('Pack'),
+('Dozen');
+
+CREATE TABLE im_item_size_type (
+    size_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    size_type_name VARCHAR(50) UNIQUE NOT NULL COMMENT 'Size type name (e.g., Weight, Clothing Sizes, Number Sizes)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO im_item_size_type (size_type_name) VALUES
+('Weight'),
+('Clothing Sizes'),
+('Clothing Number Sizes'),
+('Volume'),
+('Length'),
+('Pack Size');
+
+CREATE TABLE im_keywords (
     keyword_id INT AUTO_INCREMENT PRIMARY KEY,
-    keyword_name VARCHAR(255) NOT NULL UNIQUE
-);
+    keyword_name VARCHAR(255) UNIQUE NOT NULL COMMENT 'Keyword name (e.g., fashion, electronics, organic)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Create fs_items table
-CREATE TABLE fs_items (
-    item_id INT AUTO_INCREMENT PRIMARY KEY,
-    item_name VARCHAR(255) NOT NULL,
-    item_type_id TINYINT NOT NULL,  -- (1: Pant, 2: Shirt, 3: Shoes, 4: Jackets)
-    item_category_id TINYINT NOT NULL,  -- (1: Men, 2: Women, 3: Children)
-    item_size VARCHAR(50),
-    item_description TEXT,
-    item_cost_price DECIMAL(10,2) NOT NULL,
-    item_display_price DECIMAL(10,2) NOT NULL,
-    item_sale_price DECIMAL(10,2) NOT NULL,
-    item_stock INT NOT NULL DEFAULT 0,
-    item_status TINYINT NOT NULL DEFAULT 1
-);
+CREATE TABLE im_item_keywords (
+    item_id INT NOT NULL COMMENT 'Reference to im_Items',
+    keyword_id INT NOT NULL COMMENT 'Reference to im_keywords',
+    PRIMARY KEY (item_id, keyword_id)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-ALTER TABLE `fs_items` 
-    ADD `item_created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `item_status`,
-    ADD `item_udpated_at` DATETIME ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `item_created_at`;
-
--- Create fs_attachments table
-CREATE TABLE fs_attachments (
+CREATE TABLE im_attachments (
     attachment_id INT AUTO_INCREMENT PRIMARY KEY,
-    attachment_record_id INT NOT NULL,  -- Can be an item_id or another entity
-    attachment_name VARCHAR(255) NOT NULL,
-    attachment_type TINYINT NOT NULL  -- (0: Image, 1: Video, 2: Document)
-);
+    attachment_record_id INT NOT NULL COMMENT 'ID of the related record',
+    attachment_path VARCHAR(500) NOT NULL COMMENT 'File path or URL',
+    attachment_type VARCHAR(50) NOT NULL COMMENT 'Type of attachment (e.g., image, document, video)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Create fs_orders table
-CREATE TABLE fs_orders (
+CREATE TABLE im_item_history (
+    itemhistory_id INT AUTO_INCREMENT PRIMARY KEY,
+    itemhistory_item_id INT NOT NULL COMMENT 'Reference to im_Items',
+    itemhistory_purchase_qty INT NOT NULL COMMENT 'Quantity purchased',
+    itemhistory_total_cost_price DECIMAL(10,2) NOT NULL COMMENT 'Total cost price of the purchased items',
+    itemhistory_including_taxes TINYINT(1) DEFAULT 0 COMMENT '1 = Includes taxes, 0 = Excludes taxes',
+    itemhistory_tax_paid_value DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Total tax amount paid',
+    itemhistory_added_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Timestamp when the history record was added'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE im_brands (
+    brand_id INT AUTO_INCREMENT PRIMARY KEY,
+    brand_name VARCHAR(100) UNIQUE NOT NULL
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE im_categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    category_parent_id INT DEFAULT 0 COMMENT 'Parent category reference (0 if top-level)',
+    category_name VARCHAR(100) NOT NULL COMMENT 'Category name (e.g., Electronics, Clothing, Footwear)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE im_category_hierarchy (
+    ch_category_id INT NOT NULL COMMENT 'Category ID (Reference to im_categories)',
+    ch_parent_category_id INT DEFAULT 0 COMMENT 'Parent category ID (0 if top-level)',
+    ch_level INT NOT NULL COMMENT 'Hierarchy level (e.g., 0 for top-level, 1 for sub-category)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE im_orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
-    order_item_id INT NOT NULL,
-    order_item_qty INT NOT NULL,
-    order_type TINYINT NOT NULL,  -- (0: Delivery at home, 1: Pickup from store)
-    order_payment_mode TINYINT NOT NULL,  -- (0: Cash, 1: Card, 2: Online)
-    order_payment_amount DECIMAL(10,2) NOT NULL,
-    order_shipping_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
-    order_payment_status TINYINT NOT NULL DEFAULT 0,  -- (0: Pending, 1: Paid, 2: Failed)
-    order_customer_phone VARCHAR(15) NOT NULL,
-    order_customer_address TEXT NOT NULL
-);
+    order_invoice_id VARCHAR(10) UNIQUE COMMENT 'Auto-generated invoice ID (Format: O000001)',
+    order_customer_id INT NOT NULL COMMENT 'Reference to im_customers',
+    order_item_id INT NOT NULL COMMENT 'Reference to im_Items',
+    order_item_name VARCHAR(255) NOT NULL COMMENT 'Item name at time of purchase',
+    order_item_qty INT NOT NULL COMMENT 'Quantity purchased',
+    order_cost_price DECIMAL(10,2) NOT NULL COMMENT 'Cost price per item',
+    order_selling_price DECIMAL(10,2) NOT NULL COMMENT 'Original selling price (MRP)',
+    order_discount_value DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Discount applied',
+    order_sold_price DECIMAL(10,2) NOT NULL COMMENT 'Final price after discount',
+    order_shipping_cost DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Shipping cost',
+    order_is_paid TINYINT(1) DEFAULT 0 COMMENT '0 = Unpaid, 1 = Paid',
+    order_payment_mode TINYINT(1) NOT NULL COMMENT '0 = Cash, 1 = GPay, 2 = Cheque',
+    order_delivery_type TINYINT(1) NOT NULL COMMENT '0 = Pickup, 1 = Home Delivery',
+    order_added_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Order creation timestamp'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Insert sample data into fs_keywords
-INSERT INTO fs_keywords (keyword_name) VALUES ('Casual'), ('Formal'), ('Sportswear');
+DELIMITER $$
 
--- Insert sample data into fs_items
-INSERT INTO fs_items (item_name, item_type_id, item_category_id, item_size, item_keyword_id, item_description, item_cost_price, item_display_price, item_sale_price, item_stock, item_status) 
-VALUES 
-('Blue Jeans', 1, 2, 'L', 1, 'Comfortable denim jeans', 20.00, 35.00, 30.00, 50, 1),
-('White Shirt', 2, 3, 'M', 2, 'Elegant white shirt', 15.00, 25.00, 20.00, 30, 1);
+CREATE TRIGGER trg_generate_order_invoice
+AFTER INSERT ON im_orders
+FOR EACH ROW
+BEGIN
+    DECLARE formatted_id VARCHAR(10);
+    
+    -- Generate the invoice ID (Format: O000001)
+    SET formatted_id = CONCAT('O', LPAD(NEW.order_id, 6, '0'));
+    
+    -- Update the inserted row with the generated invoice ID
+    UPDATE im_orders 
+    SET order_invoice_id = formatted_id 
+    WHERE order_id = NEW.order_id;
+END $$
 
--- Insert sample data into fs_attachments
-INSERT INTO fs_attachments (attachment_record_id, attachment_name, attachment_type) 
-VALUES (1, 'jeans.jpg', 0),
-       (2, 'shirt.jpg', 0);
-
--- Insert sample data into fs_orders
-INSERT INTO fs_orders (order_item_id, order_item_qty, order_type, order_payment_mode, order_payment_amount, order_shipping_amount, order_payment_status, order_customer_phone, order_customer_address) 
-VALUES 
-(1, 2, 0, 2, 60.00, 5.00, 1, '9876543210', '123 Street, City'),
-(2, 1, 1, 0, 20.00, 0.00, 0, '9123456789', 'Store Pickup');
+DELIMITER ;
 
 
-CREATE TABLE `fs_items_to_keywords` (`item_id` INT NOT NULL , `keyword_id` INT NOT NULL ) ENGINE = InnoDB;
-ALTER TABLE `fs_items_to_keywords` ADD UNIQUE(`item_id`, `keyword_id`);
+CREATE TABLE im_customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(255) NOT NULL COMMENT 'Full name of the customer',
+    customer_phone_number VARCHAR(20) NOT NULL UNIQUE COMMENT 'Customer contact number',
+    customer_address TEXT COMMENT 'Customer address details'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `fs_categories` (`category_id` INT NOT NULL AUTO_INCREMENT , `category_name` VARCHAR(150) NOT NULL , PRIMARY KEY (`category_id`), UNIQUE `Category Name` (`category_name`)) ENGINE = InnoDB;
-CREATE TABLE `fs_types` (`type_id` INT NOT NULL AUTO_INCREMENT , `type_name` VARCHAR(100) NOT NULL , PRIMARY KEY (`type_id`), UNIQUE `Type Name` (`type_name`)) ENGINE = InnoDB;
+CREATE TABLE im_expenses (
+    expense_id INT AUTO_INCREMENT PRIMARY KEY,
+    expense_type_id INT NOT NULL COMMENT 'Reference to im_expense_type',
+    expense_cost DECIMAL(10,2) NOT NULL COMMENT 'Expense amount',
+    expense_payment_type TINYINT(1) NOT NULL COMMENT '0 = Cash, 1 = GPay, 2 = Cheque',
+    expense_is_paid TINYINT(1) DEFAULT 0 COMMENT '0 = Unpaid, 1 = Paid',
+    expense_date DATE NOT NULL COMMENT 'Date of the expense'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE im_expense_type (
+    expensetype_id INT AUTO_INCREMENT PRIMARY KEY,
+    expensetype_name VARCHAR(100) UNIQUE NOT NULL COMMENT 'Expense type (e.g., Electricity, Salaries, Utilities)'
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

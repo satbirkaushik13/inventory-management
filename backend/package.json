@@ -32,6 +32,7 @@
 		"sharp": "^0.33.5"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.9"
+		"nodemon": "^3.1.9",
+		"prisma": "^6.5.0"
 	}
 }

@@ -1,23 +1,21 @@
-version: '3.9' # Using the latest stable version of Docker Compose
-
 services:
     mysql:
-        image: mysql:latest # Uses the latest MySQL version
-        container_name: fashion-mysql
+        image: mysql:latest
+        container_name: inventory-mysql
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: rootpassword
-            MYSQL_DATABASE: fashion_db
-            MYSQL_USER: fashion_user
-            MYSQL_PASSWORD: fashion_pass
+            MYSQL_DATABASE: inventory_db
+            MYSQL_USER: inventory_user
+            MYSQL_PASSWORD: inventory_pass
         ports:
             - "3306:3306"
         volumes:
             - mysql_data:/var/lib/mysql
 
     phpmyadmin:
-        image: phpmyadmin/phpmyadmin:latest # Uses the latest phpMyAdmin version
-        container_name: fashion-phpmyadmin
+        image: arm64v8/phpmyadmin # ✅ ARM64-compatible image
+        container_name: inventory-phpmyadmin
         restart: always
         environment:
             PMA_HOST: mysql
