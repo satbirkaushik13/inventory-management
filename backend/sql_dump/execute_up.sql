@@ -215,3 +215,64 @@ CREATE TABLE im_expense_type (
     expensetype_id INT AUTO_INCREMENT PRIMARY KEY,
     expensetype_name VARCHAR(100) UNIQUE NOT NULL COMMENT 'Expense type (e.g., Electricity, Salaries, Utilities)'
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `im_categories` ADD UNIQUE(`category_name`);
+
+ALTER TABLE `im_category_hierarchy` ADD PRIMARY KEY(`ch_category_id`, `ch_parent_category_id`);
+
+
+DELIMITER $$
+CREATE DEFINER=`root`@`%` PROCEDURE `update_category_hierarchy`(IN `p_category_id` INT, IN `p_parent_id` INT)
+BEGIN
+  -- Step 1: Delete any existing hierarchy for the category
+  DELETE FROM im_category_hierarchy
+  WHERE ch_category_id = p_category_id;
+
+  -- Step 2: Insert the direct parent with level 1
+  IF p_parent_id IS NOT NULL AND p_parent_id > 0 THEN
+    INSERT INTO im_category_hierarchy (ch_category_id, ch_parent_category_id, ch_level)
+    VALUES (p_category_id, p_parent_id, 1);
+
+    -- Step 3: Insert all ancestors from hierarchy table (recursive-like)
+    INSERT INTO im_category_hierarchy (ch_category_id, ch_parent_category_id, ch_level)
+    SELECT
+      p_category_id,
+      ch_parent_category_id,
+      ch_level + 1
+    FROM im_category_hierarchy
+    WHERE ch_category_id = p_parent_id;
+  END IF;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_categories_insert
+AFTER INSERT ON im_categories
+FOR EACH ROW
+BEGIN
+  CALL update_category_hierarchy(NEW.category_id, NEW.category_parent_id);
+END$$
+
+CREATE TRIGGER trg_categories_update
+AFTER UPDATE ON im_categories
+FOR EACH ROW
+BEGIN
+  IF NEW.category_parent_id != OLD.category_parent_id THEN
+    CALL update_category_hierarchy(NEW.category_id, NEW.category_parent_id);
+  END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_categories_delete
+AFTER DELETE ON im_categories
+FOR EACH ROW
+BEGIN
+  DELETE FROM im_category_hierarchy
+  WHERE ch_category_id = OLD.category_id;
+END$$
+
+DELIMITER ;
