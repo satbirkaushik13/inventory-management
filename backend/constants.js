@@ -18,4 +18,6 @@ exports.constants = {
         HTTP_VERSION_NOT_SUPPORTED: 505,
         NETWORK_AUTHENTICATION_REQUIRED: 511,
     },
+    TRUE: 1,
+    FALSE: 0,
 };

@@ -1,5 +1,7 @@
+const { constants } = require("../constants");
 const db = require("../db"); // Import MySQL connection
 const crypto = require("crypto");
+const { STATUS_CODES } = require("http");
 const jwt = require("jsonwebtoken");
 // Secret key for JWT (store this securely)
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -57,6 +59,8 @@ const login = (req, res, next) => {
 
         // Login successful
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Login successful",
             token,
             user: userData,

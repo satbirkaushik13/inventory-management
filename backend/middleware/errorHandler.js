@@ -45,6 +45,7 @@ const errorHandler = (err, req, res, next) => {
     }
     res.json({
         statusCode: statusCode,
+        status: constants.FALSE,
         title: errorTitle,
         message: err.message,
         timestamp: new Date().toISOString(),
