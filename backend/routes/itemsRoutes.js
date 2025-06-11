@@ -55,20 +55,12 @@ router.route("/all").post(all);
 // Route to create/add single item
 router.route("/").post(add);
 
-// Route to get a single item by item_id
-router.route("/:item_id").get(get);
+// Route to get, update and delete a single item by item_id
+router.route("/:item_id").get(get).patch(update).delete(deleteItem);
 
-// Route to update a single item by item_id
-router.route("/:item_id").patch(update);
+// Route to get keywords and bind for a specific item by item_id
+router.route("/:item_id/keywords").get(getKeywords).post(bindKeywords);
 
-// Route to delete a single item by item_id
-router.route("/:item_id").delete(deleteItem);
-
-// Route to get keywords for a specific item by item_id
-router.route("/:item_id/keywords").get(getKeywords);
-
-// Bind keywords to an item
-router.route("/:item_id/keywords").post(bindKeywords);
 
 // Route to upload an image for an item
 router.route("/:item_id/upload").post(upload.single("attachment_name"), uploadAttachment);
