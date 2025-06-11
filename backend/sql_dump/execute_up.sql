@@ -276,3 +276,19 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+ALTER TABLE `im_items` CHANGE `item_code` `item_code` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
+
+DELIMITER $$
+
+CREATE PROCEDURE update_item_code()
+BEGIN
+    UPDATE im_items
+    SET item_code = LPAD(item_id, 6, '0')
+    WHERE item_code IS NULL OR item_code = '';
+END $$
+
+DELIMITER ;
+
+ALTER TABLE `im_attachments` ADD `attachment_name` VARCHAR(150) NOT NULL AFTER `attachment_record_id`;
+ALTER TABLE `im_attachments` CHANGE `attachment_type` `attachment_type` TINYINT NOT NULL DEFAULT '1' COMMENT '1: image, 2: document, 3: video';
