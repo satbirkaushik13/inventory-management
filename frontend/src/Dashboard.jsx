@@ -1,5 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Dashboard.css";
+import ItemsTable from "./ItemsTable";
+import BrandsTable from "./BrandsTable";
+import CategoriesTable from "./CategoriesTable";
+import KeywordsTable from "./KeywordsTable";
 
 const sidebarLinks = [
     { label: "Dashboard", path: "/dashboard" },
@@ -10,6 +14,8 @@ const sidebarLinks = [
 ];
 
 function Dashboard({ onLogout }) {
+    const [tab, setTab] = useState("items");
+
     return (
         <div className="dashboard-layout">
             <aside className="sidebar">
@@ -18,19 +24,30 @@ function Dashboard({ onLogout }) {
                     <span>Inventory Tub</span>
                 </div>
                 <nav className="sidebar-nav">
-                    {sidebarLinks.map((link) => (
-                        <a key={link.path} href={link.path} className="sidebar-link">
-                            {link.label}
-                        </a>
-                    ))}
+                    <button className={tab === "items" ? "active" : ""} onClick={() => setTab("items")}>
+                        Items
+                    </button>
+                    <button className={tab === "brands" ? "active" : ""} onClick={() => setTab("brands")}>
+                        Brands
+                    </button>
+                    <button className={tab === "categories" ? "active" : ""} onClick={() => setTab("categories")}>
+                        Categories
+                    </button>
+                    <button className={tab === "keywords" ? "active" : ""} onClick={() => setTab("keywords")}>
+                        Keywords
+                    </button>
                 </nav>
-                <button className="logout-btn" onClick={onLogout}>
-                    Logout
-                </button>
+                <div style={{ width: "100%", marginTop: "auto" }}>
+                    <button className="logout-btn" onClick={onLogout}>
+                        Logout
+                    </button>
+                </div>
             </aside>
             <main className="dashboard-viewport">
-                <h2>Dashboard Viewport</h2>
-                <p>Select a link from the sidebar to view API data.</p>
+                {tab === "items" && <ItemsTable />}
+                {tab === "brands" && <BrandsTable />}
+                {tab === "categories" && <CategoriesTable />}
+                {tab === "keywords" && <KeywordsTable />}
             </main>
         </div>
     );

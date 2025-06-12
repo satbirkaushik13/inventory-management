@@ -55,6 +55,7 @@
 
 .logout-btn {
     margin-top: auto;
+    margin-bottom: 0.5rem;
     background: #ef4444;
     color: #fff;
     border: none;
@@ -64,6 +65,7 @@
     cursor: pointer;
     transition: background 0.2s;
     width: 100%;
+    display: block;
 }
 
 .logout-btn:hover {
@@ -75,4 +77,130 @@
     padding: 2.5rem 2rem;
     background: #fff;
     min-height: 100vh;
+}
+
+.items-table-container {
+    width: 100%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.items-table th,
+.items-table td {
+    border: 1px solid #e5e7eb;
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+}
+
+.items-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+.items-table tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.items-table button {
+    margin-right: 0.5rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 5px;
+    border: none;
+    background: #6366f1;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.items-table button:last-child {
+    margin-right: 0;
+    background: #ef4444;
+}
+
+.items-table button:hover {
+    opacity: 0.85;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 2rem 1.5rem;
+    min-width: 350px;
+    max-width: 95vw;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.13);
+}
+
+.modal h3 {
+    margin-top: 0;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.2rem;
+}
+
+.modal input[type="file"] {
+    padding: 0.3rem 0;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.97rem;
+    margin-bottom: 0.2rem;
+}
+
+.form-group input {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #6366f1;
 }

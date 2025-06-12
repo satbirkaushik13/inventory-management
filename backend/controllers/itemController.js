@@ -1,4 +1,5 @@
 const db = require("../db"); // Import MySQL connection
+const { constants } = require("../constants"); // Import constants
 
 const path = require("path");
 
@@ -17,6 +18,8 @@ const all = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: results.length ? "Success" : "Failed",
             page,
             pageSize,
@@ -60,6 +63,8 @@ const add = (req, res, next) => {
         db.query("CALL update_item_code();");
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Success",
             insertedId: result.insertId,
         });
@@ -129,6 +134,8 @@ const get = (req, res, next) => {
                 }));
                 itemResultObject["attachments"] = attachments;
                 res.json({
+                    statusCode: constants.HTTP_STATUS.OK,
+                    status: constants.TRUE,
                     message: "Success",
                     data: itemResultObject,
                 });
@@ -177,6 +184,8 @@ const update = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Success",
             affectedRows: result.affectedRows,
         });
@@ -200,7 +209,11 @@ const deleteItem = (req, res, next) => {
             return next(new Error("Item not found"));
         }
 
-        res.json({ message: "Item deleted successfully" });
+        res.json({
+            message: "Item deleted successfully",
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
+        });
     });
 };
 
@@ -247,6 +260,8 @@ const getKeywords = (req, res, next) => {
 
         // Send formatted response
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Success",
             data: {
                 item_id,
@@ -295,6 +310,8 @@ const bindKeywords = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Keywords successfully linked to item",
             linkedKeywords: keywordIds,
         });
@@ -336,6 +353,8 @@ const uploadAttachment = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: `${folder} uploaded successfully`,
             attachment_url: {
                 fileName: req.file.filename,

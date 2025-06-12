@@ -1,4 +1,5 @@
 const db = require("../db"); // Import MySQL connection
+const { constants } = require("../constants"); // Import constants
 
 const all = (req, res, next) => {
     let orderBy = req.query.orderBy || "category_id"; // Default order by category_id
@@ -32,6 +33,8 @@ const all = (req, res, next) => {
 
         // Send formatted response
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Success",
             data: results,
         });
@@ -65,6 +68,8 @@ const add = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Categories added successsfully!",
             affectedRows: results.affectedRows,
         });

@@ -1,4 +1,5 @@
 const db = require("../db"); // Import MySQL connection
+const { constants } = require("../constants"); // Import constants
 
 const all = (req, res, next) => {
     let searchString = req.body.keyword_name || "";
@@ -24,6 +25,8 @@ const all = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: results.length ? "Success" : "No data found",
             data: results,
         });
@@ -68,6 +71,8 @@ const add = (req, res, next) => {
         }
 
         res.json({
+            statusCode: constants.HTTP_STATUS.OK,
+            status: constants.TRUE,
             message: "Keywords added successfully",
             insertedRows: results.affectedRows,
         });
